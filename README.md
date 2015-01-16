@@ -1,6 +1,6 @@
 # flight-with-resources
 
-[![Build Status](https://secure.travis-ci.org/<username>/flight-with-resources.png)](http://travis-ci.org/<username>/flight-with-resources)
+[![Build Status](https://secure.travis-ci.org/ahume/flight-with-resources.png)](http://travis-ci.org/ahume/flight-with-resources)
 
 A [Flight](https://github.com/flightjs/flight) mixin for sharing named resources between components. A component can provide a resource into a central registry which other components can subsequently request. On component teardown any provided resources are removed.
 
