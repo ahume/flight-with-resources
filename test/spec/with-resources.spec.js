@@ -1,9 +1,11 @@
 define(function (require) {
+    'use strict';
+
     var defineComponent = require('flight/lib/component');
     var withResources = require('lib/with-resources');
     var Base = defineComponent(withResources);
 
-    describe('util/with_resources', function () {
+    describe('withResources', function () {
         // These tests just check that providing doesn't throw — we're testing the interface,
         // and there isn't an interface beyond this.provideResource.
         describe('provideResource', function () {
@@ -38,6 +40,17 @@ define(function (require) {
                     });
                 });
                 (new Component).initialize(document.createElement('div'));
+                expect(function () {
+                    (new Component).initialize(document.createElement('div'));
+                }).toThrow();
+            });
+
+            it('should not be able to provide a non-string resource name', function () {
+                var Component = Base.mixin(function () {
+                    this.after('initialize', function () {
+                        this.provideResource(5, 'nope');
+                    });
+                });
                 expect(function () {
                     (new Component).initialize(document.createElement('div'));
                 }).toThrow();
@@ -82,6 +95,18 @@ define(function (require) {
                 (new Requester).initialize(document.createElement('div'));
             });
 
+            it('should not be able to request non-existant resources', function () {
+                var Requester = Base.mixin(function () {
+                    this.after('initialize', function () {
+                        this.requestResource('missing-cake');
+                    });
+                });
+
+                expect(function () {
+                    (new Requester).initialize(document.createElement('div'));
+                }).toThrow();
+            });
+
             it('should be able to request a named resource with some config', function () {
                 var Provider = Base.mixin(function () {
                     this.after('initialize', function () {
@@ -122,14 +147,13 @@ define(function (require) {
                 (new Provider).initialize(document.createElement('div'));
                 (new Requester).initialize(document.createElement('div'));
             });
+        });
 
-            it('should be able to delete a resource', function () {
+        describe('removeResource', function () {
+            it('should be able to remove a resource', function () {
                 var Provider = Base.mixin(function () {
-                    this.theCake = 'tasty cake!';
                     this.after('initialize', function () {
-                        this.provideResource('cake-fn-remove', function () {
-                            return this.theCake;
-                        });
+                        this.provideResource('cake-fn-remove', 'maybe some cake');
                         this.removeResource('cake-fn-remove');
                     });
                 });
@@ -145,8 +169,10 @@ define(function (require) {
                     (new Requester).initialize(document.createElement('div'));
                 }).toThrow();
             });
+        });
 
-            it('should remove resources owned by component on teardown', function () {
+        describe('component teardown', function () {
+            it('should remove resources owned by component', function () {
                 var Provider = Base.mixin(function () {
                     this.after('initialize', function () {
                         this.provideResource('cake-owned', 'go on then');
@@ -166,7 +192,43 @@ define(function (require) {
                 expect(function () {
                     (new Requester).initialize(document.createElement('div'));
                 }).toThrow();
-            })
+            });
+
+            it('should not remove resources owned by a second provider', function () {
+                var Provider = Base.mixin(function () {
+                    this.after('initialize', function () {
+                        this.provideResource('cake-owned', 'go on then');
+                    });
+                });
+                var Requester = Base.mixin(function () {
+                    this.after('initialize', function () {
+                        expect(this.requestResource('cake-owned'))
+                            .toBe('go on then');
+                    });
+                });
+                var SecondProvider = Base.mixin(function () {
+                    this.after('initialize', function () {
+                        this.provideResource('cake-available', 'always cake');
+                    });
+                });
+                var SecondRequester = Base.mixin(function () {
+                    this.after('initialize', function () {
+                        expect(this.requestResource('cake-available'))
+                            .toBe('always cake');
+                    });
+                });
+
+                var p = (new Provider).initialize(document.createElement('div'));
+                (new SecondProvider).initialize(document.createElement('div'));
+                (new Requester).initialize(document.createElement('div'));
+
+                // Teardown the first providing component and check the next request throws.
+                p.teardown();
+                expect(function () {
+                    (new Requester).initialize(document.createElement('div'));
+                }).toThrow();
+                (new SecondRequester).initialize(document.createElement('div'));
+            });
         });
     });
 });

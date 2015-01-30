@@ -18,6 +18,7 @@
   "trailing": true,
   "undef": true,
   "validthis": true,
+  "-W058": true,
   "predef": [
     "$",
     "jQuery",
