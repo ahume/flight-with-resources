@@ -18,7 +18,7 @@ Here's an example of two component definitions that use `withResources`.
 function providingComponent() {
     this.after('initialize', function () {
         this.provideResource('appManifest', {
-            version: '1.0.1',
+            versionNo: '1.0.1',
             buildNo: '1234',
             url: 'https://tweetdeck.twitter.com'
         });
